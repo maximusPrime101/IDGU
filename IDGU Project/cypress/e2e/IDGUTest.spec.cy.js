@@ -1,9 +1,11 @@
 /// <reference types="cypress" />
 
-describe('First project', () => {
+describe('IDGU project', () => {
+
+
     it('', () => {
 
-        cy.visit('https://www.amazon.com/');
+        cy.visit('https://idgu.co.il/');
 
 
         //   מציאת אלמנט Delivery to ובדיקת קיומו
