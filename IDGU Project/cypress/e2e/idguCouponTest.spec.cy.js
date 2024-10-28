@@ -1,6 +1,6 @@
 /// <reference types="cypress" />
 
-describe('Filling the cart', () => {
+describe('Add Coupon', () => {
 
     beforeEach(() => {
         cy.visit('https://idgu.co.il');
