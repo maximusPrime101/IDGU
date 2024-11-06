@@ -163,7 +163,10 @@ describe('Accessibility test', () => {
         //     cy.get('#INDcloseAccMenu').click({ force: true }); 
     });
 
-    it.only('Large black cursor test', () => {
+
+    /* There is a bug in cypress that doesn't show the Cursor.
+    */
+    it.skip('Large black cursor test', () => {
 
         //Clicks on Accessibility button 
         cy.get('#INDbtnWrap > button').click({ force: true });
@@ -213,9 +216,9 @@ describe('Accessibility test', () => {
     });
 
 
-/* There is a bug in cypress that won't show the keyboard 
-
-  it.only('Virtual keyboard test', () => {
+    /* There is a bug in cypress that doesn't show the keyboard 
+    */
+    it.skip('Virtual keyboard test', () => {
 
         //Clicks on Accessibility button 
         cy.get('#INDbtnWrap > button').click({ force: true });
@@ -240,8 +243,5 @@ describe('Accessibility test', () => {
             })
         });
 
-
-
-
     });
-*/
+});
