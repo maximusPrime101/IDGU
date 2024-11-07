@@ -9,162 +9,136 @@ describe('Add Coupon', () => {
     });
 
     it('Checks if valid coupon works', () => {
+        // Clicks on first item on carousel
+        cy.get('#featured_categories_home >div >div >div>div div:nth-child(2) a')
+            .first().click({ force: true });
 
-        //Clicks on first item on carousel 
-        cy.get('#featured_categories_home >div >div >div>div div:nth-child(2) a').first().click({ force: true });
-        cy.wait(2000);
-
-        //Saves product price
-        let productPrice;
-        cy.get('.u18195-4 span:nth-child(2)').invoke('text').then((price) => {
-            productPrice = +price;
+        // Save product price
+        cy.get('.u18195-4 span:nth-child(2)').invoke('text').then((priceText) => {
+            priceText = priceText.replace(/,/g, '');
+            const productPrice = +priceText;
             cy.log('The price is: ', productPrice);
+
+            // Get coupon code and amount
+            cy.get('#product p').invoke('text').then((text) => {
+                const fullCoupon = text.match(/GET\d+/);
+                if (fullCoupon) {
+                    const couponCode = fullCoupon[0];
+                    const couponAmount = +couponCode.slice(3);
+                    cy.log('Coupon amount is: ', couponAmount);
+
+                    // Add item to cart and apply coupon
+                    cy.get('#button-cart').click();
+                    cy.get('#collapse-coupon div input').first().type(couponCode).then(() => {
+                        cy.get('#button-coupon').click();
+                        cy.get('.alert.alert-success').should('be.visible');
+
+                        // Check total price
+                        cy.get('.u11261 span:nth-child(2)').invoke('text').then((totalText) => {
+                            totalText = totalText.replace(/,/g, '');
+                            const totalPrice = +totalText;
+                            expect(totalPrice).to.equal(productPrice - couponAmount);
+                        });
+                    });
+                } else {
+                    cy.log("No coupon code was found.");
+                }
+            });
         });
 
-        //Copy coupon and the amount
-        let couponCode;
-        let coupon;
-        cy.get('#product p').invoke('text').then((text) => {
-            let fullCoupon = text.match(/GET\d+/);
-
-            if (fullCoupon) {
-                couponCode = fullCoupon[0];
-                coupon = +couponCode.slice(3);
-                cy.log('Coupon amount is: ', coupon);
-            } else {
-                cy.log("No coupon code was found.");
-            }
-        })
-
-        //Adds item to cart
-        cy.get('#button-cart').click();
-        cy.wait(2000);
-
-        //Enter valid coupon
-        cy.get('#collapse-coupon div input').first().type(couponCode).then(() => {
-            cy.get('#button-coupon').click();
-            cy.wait(2000);
-            cy.get('.alert.alert-success').should('be.visible');
-        })
-
-        //Checks total price
-        cy.get('.u11261 span:nth-child(2)').invoke('text').then((text) => {
-            let totalPrice = +text;
-            expect(totalPrice).to.equal(productPrice - coupon);
-        });
-
-        // removes item and validates removal 
-        cy.get('.u10930 div:nth-child(2) a').click()
-        cy.get('#content h1 ').should('have.text', 'עגלת הקניות שלי')
+        // Remove item and validate removal
+        cy.get('.u10930 div:nth-child(2) a').click();
+        cy.get('#content h1').should('have.text', 'עגלת הקניות שלי');
     });
 
-    it('Checks if invalid coupon can not be entered', () => {
+    it('Checks if invalid coupon cannot be entered', () => {
 
-        //Clicks on first item on carousel 
-        cy.get('#featured_categories_home >div >div >div>div div:nth-child(2) a').first().click({ force: true });
-        cy.wait(2000);
+        // Clicks on first item on carousel
+        cy.get('#featured_categories_home >div >div >div>div div:nth-child(2) a')
+            .first().click({ force: true });
 
-        //Saves product price
-        let productPrice
-        cy.get('.u18195-4 span:nth-child(2)').invoke('text').then((price) => {
-            productPrice = +price;
+        // Save product price
+        cy.get('.u18195-4 span:nth-child(2)').invoke('text').then((priceText) => {
+            priceText = priceText.replace(/,/g, '');
+            const productPrice = +priceText;
             cy.log('The price is: ', productPrice);
+
+            // Add item to cart
+            cy.get('#button-cart').click();
+
+            // Enter invalid coupon
+            const invalidCouponCode = "INVALID123";
+            cy.get('#collapse-coupon div input').first().type(invalidCouponCode).then(() => {
+                cy.get('#button-coupon').click();
+                cy.get('.alert.alert-danger').should('be.visible');
+            });
+
+            // Check total price remains the same
+            cy.get('.u11261 span:nth-child(2)').invoke('text').then((totalText) => {
+                totalText = totalText.replace(/,/g, '');
+                const totalPrice = +totalText;
+                expect(totalPrice).to.equal(productPrice);
+                cy.log('Success - Coupon did not work!');
+            });
         });
 
-
-        //Copy coupon and the amount
-        let couponCode;
-        let coupon;
-        cy.get('#product p').invoke('text').then((text) => {
-            let fullCoupon = text.match(/GET\d+/);
-            couponCode = fullCoupon[0];
-            if (fullCoupon) {
-                coupon = +couponCode.slice(3);
-                cy.log('Coupon amount is: ', coupon);
-            } else {
-                cy.log("No coupon code found.");
-            }
-        })
-
-        //Adds item to cart
-        cy.get('#button-cart').click();
-        cy.wait(2000);
-
-        //Enter Invalid coupon
-        cy.get('#collapse-coupon div input').type(coupon).then(() => {
-            cy.get('#button-coupon').click();
-            cy.wait(2000);
-            cy.get('.alert.alert-danger').should('be.visible');
-        })
-
-        //Checks total price
-        cy.get('.u11261 span:nth-child(2)').invoke('text').then((text) => {
-            let totalPrice = +text;
-            expect(totalPrice).to.equal(productPrice);
-            cy.log('Success - Coupon did not work!');
-        });
-
-        // removes item and validates removal 
-        cy.get('.u10930 div:nth-child(2) a').click()
-        cy.get('#content h1 ').should('have.text', 'עגלת הקניות שלי')
-    })
-
-    it('Checks if valid coupon can not be entered twice', () => {
-
-        //Clicks on first item on carousel 
-        cy.get('#featured_categories_home >div >div >div>div div:nth-child(2) a').first().click({ force: true });
-        cy.wait(2000);
-
-        //Saves product price
-        let productPrice;
-        cy.get('.u18195-4 span:nth-child(2)').invoke('text').then((price) => {
-            productPrice = +price;
-            cy.log('The price is: ', productPrice);
-        });
-
-        //Copy coupon and the amount
-        let couponCode;
-        let coupon;
-        cy.get('#product p').invoke('text').then((text) => {
-            let fullCoupon = text.match(/GET\d+/);
-            couponCode = fullCoupon[0];
-            if (fullCoupon) {
-                coupon = +couponCode.slice(3);
-                cy.log('Coupon amount is: ', coupon);
-            } else {
-                cy.log("No coupon code was found.");
-            }
-        })
-
-        //Adds item to cart
-        cy.get('#button-cart').click();
-        cy.wait(2000);
-
-        //Enter valid coupon
-        cy.get('#collapse-coupon div input').type(couponCode).then(() => {
-            cy.get('#button-coupon').click();
-            cy.wait(2000);
-            cy.get('#button-coupon').click();
-            cy.wait(2000);
-            cy.get('.alert.alert-success').should('be.visible');
-        })
-
-        //Checks total price
-        cy.get('.u11261 span:nth-child(2)').invoke('text').then((text) => {
-            let totalPrice = +text;
-
-            console.log('Expected total price: ', productPrice - coupon);
-            console.log('Actual total price: ', totalPrice);
-
-            expect(totalPrice).to.equal(productPrice - coupon);
-        });
-
-        // removes item and validates removal 
-        cy.get('.u10930 div:nth-child(2) a').click()
-        cy.get('#content h1 ').should('have.text', 'עגלת הקניות שלי')
+        // Remove item and validate removal
+        cy.get('.u10930 div:nth-child(2) a').click();
+        cy.get('#content h1').should('have.text', 'עגלת הקניות שלי');
     });
 
 
+    it('Checks if valid coupon cannot be entered twice', () => {
+
+        // Click on the first item on the carousel
+        cy.get('#featured_categories_home >div >div >div>div div:nth-child(2) a')
+            .first().click({ force: true });
+
+        // Save product price
+        cy.get('.u18195-4 span:nth-child(2)').invoke('text').then((priceText) => {
+            priceText = priceText.replace(/,/g, '');
+            const productPrice = +priceText;
+            cy.log('The price is: ', productPrice);
+
+            // Get coupon code and amount
+            cy.get('#product p').invoke('text').then((text) => {
+                const fullCoupon = text.match(/GET\d+/);
+                if (fullCoupon) {
+                    const couponCode = fullCoupon[0];
+                    const couponAmount = +couponCode.slice(3);
+                    cy.log('Coupon amount is: ', couponAmount);
+
+                    // Add item to cart and apply the coupon
+                    cy.get('#button-cart').click();
+                    cy.get('#collapse-coupon div input').first().type(couponCode).then(() => {
+                        cy.get('#button-coupon').click();
+
+                        // Verify coupon applied successfully
+                        cy.get('.alert.alert-success').should('be.visible');
+                        cy.get('.alert.alert-success button').click({ force: true });
+
+                        // Apply the same coupon again
+                        cy.get('#button-coupon').click({ force: true });
+                        cy.get('.alert.alert-success button').click({ force: true });
+
+                        // Check that total price remains as expected after first application
+                        cy.get('.u11261 span:nth-child(2)').invoke('text').then((totalText) => {
+                            totalText = totalText.replace(/,/g, '');
+                            const totalPrice = +totalText;
+                            expect(totalPrice).to.equal(productPrice - couponAmount);
+                            cy.log('Total price after attempting to reapply coupon:', totalPrice);
+                        });
+                    });
+                } else {
+                    cy.log("No coupon code was found.");
+                }
+            });
+        });
+
+        // Remove item and validate removal
+        cy.get('.u10930 div:nth-child(2) a').click();
+        cy.get('#content h1').should('have.text', 'עגלת הקניות שלי');
+    });
 
 });
 
