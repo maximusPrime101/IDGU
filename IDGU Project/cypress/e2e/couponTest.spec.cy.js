@@ -3,9 +3,12 @@
 describe('Add Coupon', () => {
 
     beforeEach(() => {
+
+        // Suppress specific POST requests to analytics
+        // cy.intercept('POST', '**/g/collect').as('suppressPost');
+
         cy.visit('https://idgu.co.il');
         cy.wait(2000);
-
     });
 
     it('Checks if valid coupon works', () => {
@@ -44,6 +47,8 @@ describe('Add Coupon', () => {
                     cy.log("No coupon code was found.");
                 }
             });
+            // Assert no analytics POST requests are visible
+            //   cy.wait('@suppressPost').its('response.statusCode').should('eq', 204);
         });
 
         // Remove item and validate removal

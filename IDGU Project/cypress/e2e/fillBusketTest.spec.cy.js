@@ -5,7 +5,6 @@ describe('Filling the cart', () => {
     beforeEach(() => {
         cy.visit('https://idgu.co.il');
         //cy.wait(4000);
-
     });
 
     it('Add items to cart', () => {
@@ -40,13 +39,6 @@ describe('Filling the cart', () => {
         cy.get('.u10930 div:nth-child(2) a').click()
         cy.get('#content h1 ').should('have.text', 'עגלת הקניות שלי')
     });
-
-
-
-
-
-
-
 });
 
 
