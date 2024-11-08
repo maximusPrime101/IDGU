@@ -31,8 +31,37 @@ describe('Sign up to the website', () => {
         cy.get('div[id="calculator"]').find('#button-calculate').click({ force: true });
         //Check result
         //cy.get('div[id="calculator-results"]').find('#length').type('10', { force: true });
+        /*
+                // Perform calculation and verify prices
+                let totalSum = 0;
+                cy.get('div[id="calculator-results"]')
+                    .find('span')
+                    .should('have.length.greaterThan', 0)
+                    .each(($span, index, $list) => {
+                        const text = $span.text().trim();
+                        const spanStyle = $span.attr('style') || '';
+                        const isLineThrough = spanStyle.includes('line-through'); // Check for line-through
+                        cy.log(spanStyle);
+                        cy.log(text);
+                        // Only add price to the sum if it includes '$', is not line-through, and has float:left
+                        //      if (text.includes('$') && !isLineThrough && spanStyle.includes('float:left')) {
+                        if (text.includes(' $') && spanStyle.includes('float:left') && spanStyle.includes('font-size:15px')) {
+                            const price = parseFloat(text.replace('$', '').trim());
+                            if (isLineThrough == false) {
+                                totalSum += price;
+                                cy.log('total Sum: ', totalSum)
+                                cy.log('index:', index);
+                                cy.log('$list.length - 1:', $list.length - 1);
+                                if (index === $list.length - 1) {
+                                    const finalPrice = price;
+                                    expect(totalSum).to.eq(finalPrice);
+                                    cy.log('finnish2')
+                                }
+                            }
+                        }
+                    });
+                    */
 
-        // Perform calculation and verify prices
         let totalSum = 0;
 
         cy.get('div[id="calculator-results"]')
@@ -43,18 +72,34 @@ describe('Sign up to the website', () => {
                 const spanStyle = $span.attr('style') || '';
                 const isLineThrough = spanStyle.includes('line-through'); // Check for line-through
 
-                // Only add price to the sum if it includes '$', is not line-through, and has float:left
-                if (text.includes('$') && !isLineThrough && spanStyle.includes('float:left')) {
-                    const price = parseFloat(text.replace('$', '').trim());
-                    totalSum += price;
+                cy.log('spanStyle:', spanStyle);  // Log the style of each span
+                cy.log('text:', text);  // Log the text of the span
 
-                    if (index === $list.length - 1) {
-                        const finalPrice = price;
-                        expect(totalSum).to.eq(finalPrice);
-                        cy.log('finnish')
+                // Check if text contains a valid number (ignoring non-numeric characters)
+                const priceMatch = text.match(/[\d,.]+/);  // Match numeric values with commas or dots
+                if (priceMatch && priceMatch[0]) {
+                    // Price is a valid number, now check for the conditions
+                    const price = parseFloat(priceMatch[0].replace('$', '').trim());
+
+                    // Ensure it's a valid price and the style matches what you need
+                    if (text.includes(' $') && spanStyle.includes('float:left') && spanStyle.includes('font-size:15px') && !isLineThrough) {
+                        totalSum += price;
+                        cy.log('total Sum: ', totalSum);
+                        cy.log('index:', index);
+                        cy.log('$list.length - 1:', $list.length - 1);
+
+                        // Check if it's the last element and perform the final assertion
+                        if (index === $list.length - 1) {
+                            const finalPrice = price;
+                            expect(totalSum).to.eq(finalPrice);
+                            cy.log('finished2');
+                        }
                     }
+                } else {
+                    cy.log('Skipping non-numeric span:', text); // Skip spans that don't have numeric values
                 }
             });
+
     });
 
 
