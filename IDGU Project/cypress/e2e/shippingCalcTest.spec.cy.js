@@ -15,7 +15,124 @@ describe('Shipping calculator', () => {
 
     });
 
-    it('Calculate clothing category- Cheapest spec', () => {
+    it.only('Checks if Shipping price matching to prices table + Auto Fill', () => {
+
+        //Clothing
+        cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
+        //Underwear
+        cy.get('div[id="sub-category"]').find('div[onclick="getCalculator(\'30\',\'28\')"] >div').click({ force: true }).should('have.attr', 'class', 'blue_box_2 step_box selected', { timeout: 10000 });
+
+        //Enter shipping table.
+        cy.get('.col-sm-10.col-sm-10 li:last-of-type > a').first().click({ force: true });
+
+        //Copy shipping price
+        let shippingPrice;
+        cy.get('#content > table:nth-child(8) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(3)').invoke('text').then((text) => {
+            shippingPrice = +text.replace('$', '');
+        });
+
+        //Copy weight
+        //with alias shipping Weight
+        cy.get('#content > table:nth-child(8) > tbody:nth-child(1) > tr:nth-child(2) > td:nth-child(1)').invoke('text').then((text) => {
+            cy.wrap(+text).as('shippingWeight');
+            //    shippingWeight = +text;
+            //    cy.log(shippingWeight);
+        });
+
+        //return to calculator
+        cy.get('#content > p:nth-child(6) > strong > a').invoke('removeAttr', 'target').click({ timeout: 10000 });
+        //Clothing
+        cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
+        //Underwear
+        cy.get('div[id="sub-category"]').find('div[onclick="getCalculator(\'30\',\'28\')"] >div').click({ force: true }).should('have.attr', 'class', 'blue_box_2 step_box selected', { timeout: 10000 });
+
+
+        //Filling Calculator
+        cy.get('div[id="calculator"]').find('#our_price').type('50', { force: true });
+        cy.get('div[id="calculator"]').find('input[type="checkbox"]').first().click({ force: true }).should('be.checked');
+        //alias input
+        cy.get('@shippingWeight').then((shippingWeight) => {
+            cy.get('div[id="calculator"]').find('#weight').type(`${shippingWeight}`, { force: true });//weight
+        });
+        cy.get('div[id="calculator"]').find('#length').type('10', { force: true });//length
+        cy.get('div[id="calculator"]').find('#width').type('10', { force: true });//width
+        cy.get('div[id="calculator"]').find('#height').type('10', { force: true });//height
+        cy.get('div[id="calculator"]').find('#button-calculate').click({ force: true });
+
+        //Check result
+        let taxesAndShipping = 0;
+        let totalTax = 0;
+        let productPrice = 0;
+
+        cy.get('div[id="calculator-results"]')
+            .find('span')
+            .should('have.length.greaterThan', 0)
+            .each(($span, index, $list) => {
+                const text = $span.text().trim();
+                const spanStyle = $span.attr('style') || '';
+                const isLineThrough = spanStyle.includes('line-through');
+
+                // Match numeric values and ignore other text
+                const priceMatch = text.match(/[\d,.]+/);
+                //cy.log('priceMatch is ', priceMatch);
+
+                if (priceMatch && priceMatch[0]) {
+                    const price = parseFloat(priceMatch[0].replace('$', '').trim());
+                    //cy.log('price is ', price);
+                    //cy.log('index is ', index)
+
+                    //Saves product price
+                    if (index == 3) {
+                        productPrice = price;
+                    }
+
+                    //Shipping price comparison
+                    if (index === 5) {
+                        expect(price).to.be.equal(shippingPrice);
+                        cy.log('Shipping price equals to table')
+                    }
+
+                    // Sums all taxes and shipping  
+                    if (
+                        text.includes('$') &&
+                        spanStyle.includes('float:left') &&
+                        (spanStyle.includes('font-size:15px') || spanStyle.includes('font-size:20px')) &&
+                        !isLineThrough &&
+                        index < $list.length - 4 //Exclude Total Tax span
+                    ) {
+                        taxesAndShipping = Number((taxesAndShipping + price).toFixed(2));;
+                        // cy.log('Sum of taxes and shipping is: ', taxesAndShipping);
+                    }
+
+                    // Capture and validate the sum of tax at the correct index
+                    if (index === $list.length - 4) {
+                        totalTax = price;
+                        cy.log('Total price for taxes:', totalTax);
+
+                        // Self-check if all tax and shipping costs match the shown price
+                        cy.wrap(null).then(() => {
+                            expect(Number((taxesAndShipping - productPrice).toFixed(2))).to.eq(Number(totalTax.toFixed(2)));
+                            cy.log('Total Sum Check Passed');
+                        });
+                    }
+
+                    // Capture and validate the final price at the correct index
+                    if (index === $list.length - 2) {
+                        const finalPrice = price;
+                        cy.log('Final Price Span:', finalPrice);
+
+                        // Perform the final assertion
+                        cy.wrap(null).then(() => {
+                            expect(Number(taxesAndShipping.toFixed(2))).to.eq(Number(finalPrice.toFixed(2)));
+                            cy.log('Final Price Check Passed');
+                        });
+                    }
+                }
+            });
+
+    });
+
+    it('Minimal spec', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
@@ -96,7 +213,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it('Calculate clothing category- Special delivery tax 30$ (under 20kg, length +120cm)', () => {
+    it('Special delivery tax 30$ (under 20kg, length +120cm)', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
@@ -189,7 +306,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it('Calculate clothing category- Special delivery tax 50$ ( 20kg - 50kg )', () => {
+    it('Special delivery tax 50$ ( 20kg - 50kg )', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
@@ -275,7 +392,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it('Calculate clothing category- Special delivery tax 100$ ( above 50kg )', () => {
+    it('Special delivery tax 100$ ( above 50kg )', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
@@ -360,7 +477,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it.only('Calculate clothing category- Maximum spec', () => {
+    it('Maximum spec ( 1,000,000$ )', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
@@ -452,7 +569,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it('Calculate clothing category- Error message - Not Shippable', () => {
+    it('Error message - Not Shippable', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
