@@ -16,7 +16,7 @@ describe('Enter to Sign up web and enter your Personal Details', () => {
         cy.get('.col-sm-9').find('input[name="firstname"]').type('matanel');
         cy.get('.col-sm-9').find('input[name="lastname"]').type('amram');
         cy.get('.col-sm-9').find('input[name="user_id"]').type('303030456');
-        cy.get('.col-sm-9').find('input[name="email"]').type('matanel001@gmail.com');
+        cy.get('.col-sm-9').find('input[name="email"]').type('matanel002@gmail.com');
         cy.get('#input-ext-id').find('option').eq(3).then((option) => {
             cy.get('#input-ext-id').select(option.val());
         });
