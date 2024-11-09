@@ -15,7 +15,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it.only('Checks if Shipping price matching to prices table + Auto Fill', () => {
+    it('Checks if Shipping price matching to prices table + Auto Fill', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
@@ -569,7 +569,7 @@ describe('Shipping calculator', () => {
 
     });
 
-    it('Error message - Not Shippable', () => {
+    it('Error message received - Not Shippable', () => {
 
         //Clothing
         cy.get('#main-category').find('div[onclick="getSubCategories(\'28\')"]').click({ force: true });
