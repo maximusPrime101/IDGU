@@ -102,13 +102,7 @@ describe('Accessibility test', () => {
                 }
             });
         });
-        //Clicks on Accessibility button 
-        // cy.get('#INDbtnWrap > button').click({ force: true });
-        // cy.wait(2000);
 
-        // //select Black contrast
-        // cy.get('#INDblackwhiteBtn').click({ force: true });
-        // cy.get('#INDcloseAccMenu').click({ force: true });
     });
 
 
